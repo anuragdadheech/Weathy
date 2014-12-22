@@ -1,5 +1,6 @@
 package com.nlmm01.weathy;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -10,6 +11,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class WeatherDetailActivity extends ActionBarActivity {
@@ -24,7 +27,6 @@ public class WeatherDetailActivity extends ActionBarActivity {
                     .commit();
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -60,6 +62,12 @@ public class WeatherDetailActivity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_weather_detail, container, false);
+            Intent intent = getActivity().getIntent();
+            String details = intent.getStringExtra("details");
+            TextView weatherDet = (TextView) rootView.findViewById(R.id.weatherDetails);
+            weatherDet.setText(details);
+
+            Toast.makeText(getActivity(), details, Toast.LENGTH_SHORT).show();
             return rootView;
         }
     }

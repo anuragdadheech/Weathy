@@ -1,5 +1,6 @@
 package com.nlmm01.weathy;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -101,7 +102,10 @@ public class ForecastFragment extends Fragment {
         forecast.setAdapter(weatherListAdapter);
         forecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Toast.makeText(getActivity(), (String) weatherListAdapter.getItem(position), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity(), (String) weatherListAdapter.getItem(position), Toast.LENGTH_SHORT).show();
+                Intent detailIntent = new Intent(getActivity(), WeatherDetailActivity.class);
+                detailIntent.putExtra("details", (String) weatherListAdapter.getItem(position));
+                getActivity().startActivity(detailIntent);
             }
         });
         return rootView;
