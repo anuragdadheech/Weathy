@@ -44,7 +44,8 @@ public class WeatherDetailActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            this.startActivity(settingsIntent);
         }
 
         return super.onOptionsItemSelected(item);
