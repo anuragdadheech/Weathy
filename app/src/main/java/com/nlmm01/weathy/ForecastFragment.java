@@ -1,9 +1,11 @@
 package com.nlmm01.weathy;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -55,6 +57,11 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
+    public void onStart(){
+        super.onStart();
+        updateWeather();
+    }
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -63,30 +70,23 @@ public class ForecastFragment extends Fragment {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
-            new FetchWeatherTask().execute("Bangalore");
+            updateWeather();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void updateWeather(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String city = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_default_location));
+        new FetchWeatherTask().execute(city);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-        String[] values = new String[] {
-                "Today - Sunny - 27/17",
-                "Tomorrow - Cloudy - 22/14",
-                "Saturday - Foggy - 22/12",
-                "Sunday - Foggy - 20/10",
-                "Monday - Its raining cats and dogs - 25/16",
-                "Tuesday - Sunny - 28/19",
-                "Wednesday - Drizzly - 23/14"
-        };
-        List<String> dayList = new ArrayList<String>(
-                Arrays.asList(values)
-        );
 
         weatherListAdapter = new ArrayAdapter<String>(
                 //current Context
@@ -96,7 +96,7 @@ public class ForecastFragment extends Fragment {
                 //list view item id in layout
                 R.id.list_item_forecast_textview,
                 //data array list
-                dayList
+                new ArrayList<String>()
         );
         final ListView forecast = (ListView) rootView.findViewById(R.id.listview_forecast);
         forecast.setAdapter(weatherListAdapter);

@@ -11,6 +11,7 @@
         based on your message history
     </string>
 
+    <string name="pref_location_key">pref_location</string>
     <string name="pref_title_location">Location</string>
     <string name="pref_default_location">Delhi</string>
 
