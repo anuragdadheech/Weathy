@@ -30,12 +30,15 @@
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync">Data &amp; sync</string>
 
-    <string name="pref_title_temp">Temperature Unit</string>
-    <string-array name="pref_temp_units">
+    <string name="pref_temperature">pref_temperature</string>
+    <string name="pref_temperature_celsius">c</string>
+    <string name="pref_temperature_fahrenheit">f</string>
+    <string name="pref_title_temperature">Temperature Unit</string>
+    <string-array name="pref_temperature_units">
         <item>Celsius</item>
         <item>Fahrenheit</item>
     </string-array>
-    <string-array name="pref_temp_units_values">
+    <string-array name="pref_temperature_units_values">
         <item>c</item>
         <item>f</item>
     </string-array>

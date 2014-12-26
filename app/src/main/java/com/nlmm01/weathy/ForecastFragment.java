@@ -130,6 +130,14 @@ public class ForecastFragment extends Fragment {
          */
         private String formatHighLows(double high, double low) {
             // For presentation, assume the user doesn't care about tenths of a degree.
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String temperatureFormat = prefs.getString(getString(R.string.pref_temperature), getString(R.string.pref_temperature_celsius));
+            String fahrenheit = getString(R.string.pref_temperature_fahrenheit);
+            if(temperatureFormat.equals(fahrenheit)) {
+                low = (low*(9/5))+32;
+                high = (high*(9/5))+32;
+            }
+
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
 

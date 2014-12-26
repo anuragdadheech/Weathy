@@ -8,11 +8,11 @@
         android:singleLine="true" />
 
     <ListPreference
-        android:key="pref_temp"
-        android:title="@string/pref_title_temp"
-        android:entries="@array/pref_temp_units"
-        android:entryValues="@array/pref_temp_units_values"
-        android:defaultValue="c"
+        android:key="@string/pref_temperature"
+        android:title="@string/pref_title_temperature"
+        android:entries="@array/pref_temperature_units"
+        android:entryValues="@array/pref_temperature_units_values"
+        android:defaultValue="@string/pref_temperature_celsius"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null" />
 
