@@ -2,6 +2,7 @@ package com.nlmm01.weathy;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -72,6 +73,16 @@ public class ForecastFragment extends Fragment {
         if (id == R.id.action_refresh) {
             updateWeather();
             return true;
+        }
+        if (id == R.id.action_geo) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String location = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_default_location));
+            Intent geoIntent = new Intent (Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + location)); // Prepare intent
+            ActivityInfo activityInfo = geoIntent.resolveActivityInfo(getActivity().getPackageManager(), geoIntent.getFlags());
+            if (activityInfo.exported) {
+                startActivity(geoIntent);
+            }
+
         }
 
         return super.onOptionsItemSelected(item);
