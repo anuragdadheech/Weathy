@@ -33,12 +33,43 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("Log", "On create");
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new ForecastFragment())
                     .commit();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("Log", "On Pause");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("Log", "On Stop");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("Log", "On Resume");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("Log", "On Start");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("Log", "On Destroy");
     }
 
 
