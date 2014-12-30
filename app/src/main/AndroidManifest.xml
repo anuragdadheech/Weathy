@@ -34,6 +34,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nlmm01.weathy.MainActivity" />
         </activity>
+        <provider
+            android:authorities="com.nlmm01.weathy"
+            android:name=".data.WeatherProvider" />
     </application>
 
 </manifest>
