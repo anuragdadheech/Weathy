@@ -1,13 +1,22 @@
 package com.nlmm01.weathy;
 
+import com.nlmm01.weathy.data.WeatherContract;
+import com.nlmm01.weathy.data.WeatherContract.WeatherEntry;
+import com.nlmm01.weathy.data.WeatherContract.LocationEntry;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +27,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -39,12 +49,41 @@ import java.util.List;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ForecastFragment extends Fragment {
+public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+
+    private  String mLocation;
+    private static final int FORECAST_LOADER = 0;
+
+    // For the forecast view we're showing only a small subset of the stored data.
+    // Specify the columns we need.
+    private static final String[] FORECAST_COLUMNS = {
+            // In this case the id needs to be fully qualified with a table name, since
+            // the content provider joins the location & weather tables in the background
+            // (both have an _id column)
+            // On the one hand, that's annoying.  On the other, you can search the weather table
+            // using the location set by the user, which is only in the Location table.
+            // So the convenience is worth it.
+            WeatherEntry.TABLE_NAME + "." + WeatherEntry._ID,
+            WeatherEntry.COLUMN_DATETEXT,
+            WeatherEntry.COLUMN_SHORT_DESC,
+            WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherEntry.COLUMN_MIN_TEMP,
+            LocationEntry.COLUMN_LOCATION_SETTING
+    };
+    // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
+    // must change.
+    public static final int COL_WEATHER_ID = 0;
+    public static final int COL_WEATHER_DATE = 1;
+    public static final int COL_WEATHER_DESC = 2;
+    public static final int COL_WEATHER_MAX_TEMP = 3;
+    public static final int COL_WEATHER_MIN_TEMP = 4;
+    public static final int COL_LOCATION_SETTING = 5;
+
 
     public ForecastFragment() {
     }
 
-    private ArrayAdapter weatherListAdapter;
+    private SimpleCursorAdapter weatherListAdapter;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,9 +97,16 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (mLocation != null && !Utility.getPreferredLocation(this.getActivity()).equals(mLocation)){
+            getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
+        }
+    }
+
+    @Override
     public void onStart(){
         super.onStart();
-        updateWeather();
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -89,9 +135,8 @@ public class ForecastFragment extends Fragment {
     }
 
     private void updateWeather(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String city = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_default_location));
-        new FetchWeatherTask().execute(city);
+        String city = Utility.getPreferredLocation(getActivity());
+        new FetchWeatherTask(getActivity()).execute(city);
     }
 
     @Override
@@ -99,226 +144,118 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        weatherListAdapter = new ArrayAdapter<String>(
+        weatherListAdapter = new SimpleCursorAdapter(
                 //current Context
                 getActivity(),
                 //list view item layout
                 R.layout.list_item_forecast,
-                //list view item id in layout
-                R.id.list_item_forecast_textview,
-                //data array list
-                new ArrayList<String>()
+                null,
+                new String[]{WeatherContract.WeatherEntry.COLUMN_DATETEXT,
+                        WeatherContract.WeatherEntry.COLUMN_SHORT_DESC,
+                        WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+                        WeatherContract.WeatherEntry.COLUMN_MIN_TEMP
+                },
+                new int[]{R.id.list_item_date_textview,
+                        R.id.list_item_forecast_textview,
+                        R.id.list_item_high_textview,
+                        R.id.list_item_low_textview
+                },
+                0
+
         );
+        weatherListAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                boolean isMetric = Utility.isMetric(getActivity());
+                switch (columnIndex) {
+                    case COL_WEATHER_MAX_TEMP:
+                    case COL_WEATHER_MIN_TEMP: {
+                        // we have to do some formatting and possibly a conversion
+                        ((TextView) view).setText(Utility.formatTemperature(
+                                cursor.getDouble(columnIndex), isMetric));
+                        return true;
+                    }
+                    case COL_WEATHER_DATE: {
+                        String dateString = cursor.getString(columnIndex);
+                        TextView dateView = (TextView) view;
+                        dateView.setText(Utility.formatDate(dateString));
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
         final ListView forecast = (ListView) rootView.findViewById(R.id.listview_forecast);
         forecast.setAdapter(weatherListAdapter);
         forecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                SimpleCursorAdapter detailAadapter = (SimpleCursorAdapter) parent.getAdapter();
+                Cursor detailCursor = detailAadapter.getCursor();
+                if (detailCursor != null && detailCursor.moveToPosition(position)) {
+                    String dateString = Utility.formatDate(detailCursor.getString(COL_WEATHER_DATE));
+                    String weatherDescription = detailCursor.getString(COL_WEATHER_DESC);
+
+                    boolean isMetric = Utility.isMetric(getActivity());
+                    String high = Utility.formatTemperature(
+                            detailCursor.getDouble(COL_WEATHER_MAX_TEMP), isMetric);
+                    String low = Utility.formatTemperature(
+                            detailCursor.getDouble(COL_WEATHER_MIN_TEMP), isMetric);
+
+                    String detailString = String.format("%s - %s - %s/%s",
+                            dateString, weatherDescription, high, low);
+
+                    Intent detailIntent = new Intent(getActivity(), WeatherDetailActivity.class);
+                    detailIntent.putExtra(Intent.EXTRA_TEXT, detailCursor.getString(COL_WEATHER_DATE));
+                    getActivity().startActivity(detailIntent);
+                }
+
+
                 //Toast.makeText(getActivity(), (String) weatherListAdapter.getItem(position), Toast.LENGTH_SHORT).show();
-                Intent detailIntent = new Intent(getActivity(), WeatherDetailActivity.class);
-                detailIntent.putExtra("details", (String) weatherListAdapter.getItem(position));
-                getActivity().startActivity(detailIntent);
+
             }
         });
         return rootView;
     }
 
-    public class FetchWeatherTask extends AsyncTask<String,Void,String[]>{
-        private final String Log_Tag = FetchWeatherTask.class.getSimpleName();
-
-        /* The date/time conversion code is going to be moved outside the asynctask later,
-         * so for convenience we're breaking it out into its own method now.
-         */
-        private String getReadableDateString(long time){
-            // Because the API returns a unix timestamp (measured in seconds),
-            // it must be converted to milliseconds in order to be converted to valid date.
-            Date date = new Date(time * 1000);
-            SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
-            return format.format(date);
-        }
-
-        /**
-         * Prepare the weather high/lows for presentation.
-         */
-        private String formatHighLows(double high, double low) {
-            // For presentation, assume the user doesn't care about tenths of a degree.
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String temperatureFormat = prefs.getString(getString(R.string.pref_temperature), getString(R.string.pref_temperature_celsius));
-            String fahrenheit = getString(R.string.pref_temperature_fahrenheit);
-            if(temperatureFormat.equals(fahrenheit)) {
-                low = (low*(9/5))+32;
-                high = (high*(9/5))+32;
-            }
-
-            long roundedHigh = Math.round(high);
-            long roundedLow = Math.round(low);
-
-            return roundedHigh + "/" + roundedLow;
-        }
-
-        /**
-         * Take the String representing the complete forecast in JSON Format and
-         * pull out the data we need to construct the Strings needed for the wireframes.
-         *
-         * Fortunately parsing is easy:  constructor takes the JSON string and converts it
-         * into an Object hierarchy for us.
-         */
-        private String[] getWeatherDataFromJson(String forecastJsonStr, int numDays)
-                throws JSONException {
-
-            // These are the names of the JSON objects that need to be extracted.
-            final String OWM_LIST = "list";
-            final String OWM_WEATHER = "weather";
-            final String OWM_TEMPERATURE = "temp";
-            final String OWM_MAX = "max";
-            final String OWM_MIN = "min";
-            final String OWM_DATETIME = "dt";
-            final String OWM_DESCRIPTION = "main";
-
-            JSONObject forecastJson = new JSONObject(forecastJsonStr);
-            JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
-
-            String[] resultStrs = new String[numDays];
-            for(int i = 0; i < weatherArray.length(); i++) {
-                // For now, using the format "Day, description, hi/low"
-                String day;
-                String description;
-                String highAndLow;
-
-                // Get the JSON object representing the day
-                JSONObject dayForecast = weatherArray.getJSONObject(i);
-
-                // The date/time is returned as a long.  We need to convert that
-                // into something human-readable, since most people won't read "1400356800" as
-                // "this saturday".
-                long dateTime = dayForecast.getLong(OWM_DATETIME);
-                day = getReadableDateString(dateTime);
-
-                // description is in a child array called "weather", which is 1 element long.
-                JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-                description = weatherObject.getString(OWM_DESCRIPTION);
-
-                // Temperatures are in a child object called "temp".  Try not to name variables
-                // "temp" when working with temperature.  It confuses everybody.
-                JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
-                double high = temperatureObject.getDouble(OWM_MAX);
-                double low = temperatureObject.getDouble(OWM_MIN);
-
-                highAndLow = formatHighLows(high, low);
-                resultStrs[i] = day + " - " + description + " - " + highAndLow;
-            }
-
-            return resultStrs;
-        }
-
-        @Override
-        protected void onPostExecute(String[] strings) {
-            if (strings != null) {
-                weatherListAdapter.clear();
-                for (String dayForecastStr: strings) {
-                    weatherListAdapter.add(dayForecastStr);
-                }
-
-            }
-        }
-
-        @Override
-        protected String[] doInBackground(String... city) {
-            // These two need to be declared outside the try/catch
-            // so that they can be closed in the finally block.
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
-            String forecastJsonStr = null;
-            String format = "json";
-            String units = "metric";
-            int numDays = 7;
-            if (city.length == 0) {
-                return null;
-            }
-
-            try {
-                // Construct the URL for the OpenWeatherMap query
-                // Possible parameters are available at OWM's forecast API page, at
-                // http://openweathermap.org/API#forecast
-                Uri.Builder builder = new Uri.Builder();
-                final String Query_Param = "q";
-                final String Mode_Param = "mode";
-                final String Unit_Param = "units";
-                final String Count_Param = "cnt";
-                builder.scheme("http")
-                        .authority("api.openweathermap.org")
-                        .appendPath("data")
-                        .appendPath("2.5")
-                        .appendPath("forecast")
-                        .appendPath("daily")
-                        .appendQueryParameter(Query_Param, city[0])
-                        .appendQueryParameter(Mode_Param, format)
-                        .appendQueryParameter(Unit_Param, units)
-                        .appendQueryParameter(Count_Param, Integer.toString(numDays));
-                URL url = new URL(builder.build().toString());
-                // URL url1 = new URL("http://api.openweathermap.org/data/2.5/forecast/daily?q=94043&mode=json&units=metric&cnt=7");
-
-                // Create the request to OpenWeatherMap, and open the connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    forecastJsonStr = null;
-                }
-                forecastJsonStr = buffer.toString();
-
-
-            } catch (IOException e) {
-                Log.e(Log_Tag, "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attempting
-                // to parse it.
-                forecastJsonStr = null;
-            } finally{
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e("PlaceholderFragment", "Error closing stream", e);
-                    }
-                }
-            }
-
-            try {
-                Log.d(Log_Tag, getWeatherDataFromJson(forecastJsonStr, numDays).toString());
-                return getWeatherDataFromJson(forecastJsonStr, numDays);
-            }
-            catch (JSONException e){
-                Log.e("JSONException", "Error" + e.getMessage(), e);
-                e.printStackTrace();
-            }
-
-            return null;
-
-        }
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        getLoaderManager().initLoader(FORECAST_LOADER, null, this);
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        // To only show current and future dates, get the String representation for today,
+        // and filter the query to return weather only for dates after or including today.
+        // Only return data after today.
+        String startDate = WeatherContract.getDbDateString(new Date());
 
+        // Sort order:  Ascending, by date.
+        String sortOrder = WeatherEntry.COLUMN_DATETEXT + " ASC";
+
+        mLocation = Utility.getPreferredLocation(getActivity());
+        Uri weatherForLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(
+                mLocation, startDate);
+
+        // Now create and return a CursorLoader that will take care of
+        // creating a Cursor for the data being displayed.
+        return new CursorLoader(
+                getActivity(),
+                weatherForLocationUri,
+                FORECAST_COLUMNS,
+                null,
+                null,
+                sortOrder
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        weatherListAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        weatherListAdapter.swapCursor(null);
+    }
 }

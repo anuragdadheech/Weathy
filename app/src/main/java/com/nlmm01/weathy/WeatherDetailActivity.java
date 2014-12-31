@@ -1,6 +1,12 @@
 package com.nlmm01.weathy;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.MenuCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -19,10 +25,18 @@ import android.os.Build;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nlmm01.weathy.data.WeatherContract;
+import com.nlmm01.weathy.data.WeatherContract.WeatherEntry;
+import com.nlmm01.weathy.data.WeatherContract.LocationEntry;
+
+import java.util.Date;
 import java.util.zip.Inflater;
 
 
 public class WeatherDetailActivity extends ActionBarActivity {
+
+    public static final String DATE_KEY = "forecast_date";
+    private static final String LOCATION_KEY = "location";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,18 +44,18 @@ public class WeatherDetailActivity extends ActionBarActivity {
         setContentView(R.layout.activity_weather_detail);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, new DetailFragment())
                     .commit();
         }
     }
-//
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_weather_detail, menu);
-//        return true;
-//    }
 
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_weather_detail, menu);
+        return true;
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -49,68 +63,143 @@ public class WeatherDetailActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Intent settingsIntent = new Intent(this, SettingsActivity.class);
-            this.startActivity(settingsIntent);
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
+
 
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
+    public static class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-        private static final String LOG_TAG = PlaceholderFragment.class.getSimpleName();
-        private static final String Share_Hashtag = " @Weathy";
-        private String details;
+        private final String LOG_TAG = DetailFragment.class.getSimpleName();
+        private static final int DETAIL_LOADER = 0;
+        private ShareActionProvider mShareActionProvider;
+        private String mLocation;
+        private String mForecast;
 
-        public PlaceholderFragment() {
+        private static final String FORECAST_SHARE_HASHTAG = " #Weathy";
+
+        public DetailFragment() {
             setHasOptionsMenu(true);
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_weather_detail, container, false);
-            Intent intent = getActivity().getIntent();
-            if (intent != null && intent.hasExtra("details")) {
-                details = intent.getStringExtra("details");
-                TextView weatherDet = (TextView) rootView.findViewById(R.id.weatherDetails);
-                weatherDet.setText(details);
-
-            }
-
-            //Toast.makeText(getActivity(), details, Toast.LENGTH_SHORT).show();
-            return rootView;
-        }
-
-        private Intent CreateShareForecastIntent(){
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, details + Share_Hashtag);
-            return shareIntent;
+            return inflater.inflate(R.layout.fragment_weather_detail, container, false);
         }
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
             // Inflate the menu; this adds items to the action bar if it is present.
             inflater.inflate(R.menu.detailfragment, menu);
-            MenuItem menuitem = menu.findItem(R.id.action_share);
-            ShareActionProvider mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuitem);
 
-            if(mShareActionProvider != null) {
-                mShareActionProvider.setShareIntent(CreateShareForecastIntent());
-            }
-            else{
-                Log.d(LOG_TAG, "Share action provider is null");
+            // Retrieve the share menu item
+            MenuItem menuItem = menu.findItem(R.id.action_share);
+
+            // Get the provider and hold onto it to set/change the share intent.
+            ShareActionProvider mShareActionProvider =
+                    (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+
+            // Attach an intent to this ShareActionProvider.  You can update this at any time,
+            // like when the user selects a new piece of data they might like to share.
+            if (mShareActionProvider != null ) {
+                mShareActionProvider.setShareIntent(createShareForecastIntent());
+            } else {
+                Log.d(LOG_TAG, "Share Action Provider is null?");
             }
         }
 
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            outState.putString(LOCATION_KEY, mLocation);
+            super.onSaveInstanceState(outState);
+        }
+
+        @Override
+        public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+            if (savedInstanceState != null) {
+                mLocation = savedInstanceState.getString(LOCATION_KEY);
+            }
+            super.onActivityCreated(savedInstanceState);
+        }
+
+        private Intent createShareForecastIntent() {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT,
+                    mForecast + FORECAST_SHARE_HASHTAG);
+            return shareIntent;
+        }
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+            Intent intent = getActivity().getIntent();
+            if (intent == null || !intent.hasExtra(DATE_KEY)) {
+                return null;
+            }
+
+            String forecastDate = intent.getStringExtra(DATE_KEY);
+            Uri weatherDataByDate = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(Utility.getPreferredLocation(getActivity()),forecastDate);
+
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    weatherDataByDate,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            if (!data.moveToFirst()) {
+                Log.d(LOG_TAG, "empty dataset");
+                return;
+            }
+            String dateString = Utility.formatDate(
+                    data.getString(data.getColumnIndex(WeatherEntry.COLUMN_DATETEXT)));
+            ((TextView) getView().findViewById(R.id.detail_date_textview))
+                    .setText(dateString);
+
+            String weatherDescription =
+                    data.getString(data.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC));
+            ((TextView) getView().findViewById(R.id.detail_forecast_textview))
+                    .setText(weatherDescription);
+
+            boolean isMetric = Utility.isMetric(getActivity());
+
+            String high = Utility.formatTemperature(
+                    data.getDouble(data.getColumnIndex(WeatherEntry.COLUMN_MAX_TEMP)), isMetric);
+            ((TextView) getView().findViewById(R.id.detail_high_textview)).setText(high);
+
+            String low = Utility.formatTemperature(
+                    data.getDouble(data.getColumnIndex(WeatherEntry.COLUMN_MIN_TEMP)), isMetric);
+            ((TextView) getView().findViewById(R.id.detail_low_textview)).setText(low);
+
+            mForecast = String.format("%s - %s - %s/%s", dateString, weatherDescription, high, low);
+
+            if (mShareActionProvider != null) {
+                mShareActionProvider.setShareIntent(createShareForecastIntent());
+            }
+
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
 
     }
 }

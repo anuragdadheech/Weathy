@@ -24,6 +24,8 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 
+import com.nlmm01.weathy.data.WeatherContract;
+
 import java.util.List;
 
 /**
@@ -37,7 +39,7 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener{
     /**
      * Determines whether to always show the simplified settings UI, where
      * settings are presented in a single list. When false, settings are shown
@@ -45,6 +47,7 @@ public class SettingsActivity extends PreferenceActivity {
      * shown on tablets.
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
+    boolean mBindingPreference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,112 +121,56 @@ public class SettingsActivity extends PreferenceActivity {
                 || !isXLargeTablet(context);
     }
 
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-        @Override
-        public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
+    @Override
+    public boolean onPreferenceChange(Preference preference, Object value) {
+        String stringValue = value.toString();
 
-            if (preference instanceof ListPreference) {
-                // For list preferences, look up the correct display value in
-                // the preference's 'entries' list.
-                ListPreference listPreference = (ListPreference) preference;
-                int index = listPreference.findIndexOfValue(stringValue);
-
-                // Set the summary to reflect the new value.
-                preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null);
-
+        // are we starting the preference activity?
+        if ( !mBindingPreference ) {
+            if (preference.getKey().equals(getString(R.string.pref_location_key))) {
+                FetchWeatherTask weatherTask = new FetchWeatherTask(this);
+                String location = value.toString();
+                weatherTask.execute(location);
             } else {
-                // For all other preferences, set the summary to the value's
-                // simple string representation.
-                preference.setSummary(stringValue);
+                // notify code that weather may be impacted
+                getContentResolver().notifyChange(WeatherContract.WeatherEntry.CONTENT_URI, null);
             }
-            return true;
         }
-    };
+
+        if (preference instanceof ListPreference) {
+            // For list preferences, look up the correct display value in
+            // the preference's 'entries' list (since they have separate labels/values).
+            ListPreference listPreference = (ListPreference) preference;
+            int prefIndex = listPreference.findIndexOfValue(stringValue);
+            if (prefIndex >= 0) {
+                preference.setSummary(listPreference.getEntries()[prefIndex]);
+            }
+        } else {
+            // For other preferences, set the summary to the value's simple string representation.
+            preference.setSummary(stringValue);
+        }
+        return true;
+    }
 
     /**
-     * Binds a preference's summary to its value. More specifically, when the
-     * preference's value is changed, its summary (line of text below the
-     * preference title) is updated to reflect the value. The summary is also
-     * immediately updated upon calling this method. The exact display format is
-     * dependent on the type of preference.
-     *
-     * @see #sBindPreferenceSummaryToValueListener
-     */
-    private static void bindPreferenceSummaryToValue(Preference preference) {
+    * Attaches a listener so the summary is always updated with the preference value.
+    * Also fires the listener once, to initialize the summary (so it shows up before the value
+    * is changed.)
+    */
+    private void bindPreferenceSummaryToValue(Preference preference) {
+        mBindingPreference = true;
+
         // Set the listener to watch for value changes.
-        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
+        preference.setOnPreferenceChangeListener(this);
 
         // Trigger the listener immediately with the preference's
         // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+        onPreferenceChange(preference,
                 PreferenceManager
                         .getDefaultSharedPreferences(preference.getContext())
                         .getString(preference.getKey(), ""));
+
+        mBindingPreference = false;
     }
 
-    /**
-     * This fragment shows general preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
-        }
-    }
-
-    /**
-     * This fragment shows notification preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class NotificationPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-        }
-    }
-
-    /**
-     * This fragment shows data and sync preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class DataSyncPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_data_sync);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-        }
-    }
 }
