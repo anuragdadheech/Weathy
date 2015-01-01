@@ -1,5 +1,6 @@
 package com.nlmm01.weathy;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -89,6 +90,15 @@ public class WeatherDetailActivity extends ActionBarActivity {
         }
 
         @Override
+        public void onResume() {
+            super.onResume();
+            if (mLocation != null &&
+                    !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
+                getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+            }
+        }
+
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             return inflater.inflate(R.layout.fragment_weather_detail, container, false);
@@ -165,6 +175,9 @@ public class WeatherDetailActivity extends ActionBarActivity {
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             if (!data.moveToFirst()) {
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("No data")
+                        .show();
                 Log.d(LOG_TAG, "empty dataset");
                 return;
             }
