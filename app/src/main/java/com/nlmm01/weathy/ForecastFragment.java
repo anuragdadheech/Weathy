@@ -83,7 +83,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public ForecastFragment() {
     }
 
-    private SimpleCursorAdapter weatherListAdapter;
+    private ForecastAdapter weatherListAdapter;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -144,61 +144,21 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        weatherListAdapter = new SimpleCursorAdapter(
-                //current Context
-                getActivity(),
-                //list view item layout
-                R.layout.list_item_forecast,
-                null,
-                new String[]{WeatherContract.WeatherEntry.COLUMN_DATETEXT,
-                        WeatherContract.WeatherEntry.COLUMN_SHORT_DESC,
-                        WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
-                        WeatherContract.WeatherEntry.COLUMN_MIN_TEMP
-                },
-                new int[]{R.id.list_item_date_textview,
-                        R.id.list_item_forecast_textview,
-                        R.id.list_item_high_textview,
-                        R.id.list_item_low_textview
-                },
-                0
-
-        );
-        weatherListAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-            @Override
-            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-                boolean isMetric = Utility.isMetric(getActivity());
-                switch (columnIndex) {
-                    case COL_WEATHER_MAX_TEMP:
-                    case COL_WEATHER_MIN_TEMP: {
-                        // we have to do some formatting and possibly a conversion
-                        ((TextView) view).setText(Utility.formatTemperature(
-                                cursor.getDouble(columnIndex), isMetric));
-                        return true;
-                    }
-                    case COL_WEATHER_DATE: {
-                        String dateString = cursor.getString(columnIndex);
-                        TextView dateView = (TextView) view;
-                        dateView.setText(Utility.formatDate(dateString));
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
+        weatherListAdapter = new ForecastAdapter(getActivity(),null,0);
         final ListView forecast = (ListView) rootView.findViewById(R.id.listview_forecast);
         forecast.setAdapter(weatherListAdapter);
         forecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                SimpleCursorAdapter detailAadapter = (SimpleCursorAdapter) parent.getAdapter();
+                ForecastAdapter detailAadapter = (ForecastAdapter) parent.getAdapter();
                 Cursor detailCursor = detailAadapter.getCursor();
                 if (detailCursor != null && detailCursor.moveToPosition(position)) {
                     String dateString = Utility.formatDate(detailCursor.getString(COL_WEATHER_DATE));
                     String weatherDescription = detailCursor.getString(COL_WEATHER_DESC);
 
                     boolean isMetric = Utility.isMetric(getActivity());
-                    String high = Utility.formatTemperature(
+                    String high = Utility.formatTemperature(getActivity(),
                             detailCursor.getDouble(COL_WEATHER_MAX_TEMP), isMetric);
-                    String low = Utility.formatTemperature(
+                    String low = Utility.formatTemperature(getActivity(),
                             detailCursor.getDouble(COL_WEATHER_MIN_TEMP), isMetric);
 
                     String detailString = String.format("%s - %s - %s/%s",
