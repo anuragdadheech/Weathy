@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -181,25 +182,33 @@ public class WeatherDetailActivity extends ActionBarActivity {
                 Log.d(LOG_TAG, "empty dataset");
                 return;
             }
+            ViewHolder holder = new ViewHolder(getView());
             String dateString = Utility.formatDate(
                     data.getString(data.getColumnIndex(WeatherEntry.COLUMN_DATETEXT)));
-            ((TextView) getView().findViewById(R.id.detail_date_textview))
-                    .setText(dateString);
+            holder.dateView.setText(dateString);
 
             String weatherDescription =
                     data.getString(data.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC));
-            ((TextView) getView().findViewById(R.id.detail_forecast_textview))
-                    .setText(weatherDescription);
+            holder.descriptionView.setText(weatherDescription);
 
             boolean isMetric = Utility.isMetric(getActivity());
 
             String high = Utility.formatTemperature(getActivity(),
                     data.getDouble(data.getColumnIndex(WeatherEntry.COLUMN_MAX_TEMP)), isMetric);
-            ((TextView) getView().findViewById(R.id.detail_high_textview)).setText(high);
+            holder.highTempView.setText(high);
 
             String low = Utility.formatTemperature(getActivity(),
                     data.getDouble(data.getColumnIndex(WeatherEntry.COLUMN_MIN_TEMP)), isMetric);
-            ((TextView) getView().findViewById(R.id.detail_low_textview)).setText(low);
+            holder.lowTempView.setText(low);
+
+            String humidity = data.getString(data.getColumnIndex(WeatherEntry.COLUMN_HUMIDITY));
+            holder.humidityView.setText(humidity);
+
+            String pressure = data.getString(data.getColumnIndex(WeatherEntry.COLUMN_PRESSURE));
+            holder.pressureView.setText(pressure);
+
+            String wind = data.getString(data.getColumnIndex(WeatherEntry.COLUMN_WIND_SPEED));
+            holder.windView.setText(wind);
 
             mForecast = String.format("%s - %s - %s/%s", dateString, weatherDescription, high, low);
 
@@ -212,6 +221,31 @@ public class WeatherDetailActivity extends ActionBarActivity {
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
 
+        }
+
+        /**
+         * Cache of the children views for a forecast list item.
+         */
+        public static class ViewHolder {
+            public final ImageView iconView;
+            public final TextView dateView;
+            public final TextView descriptionView;
+            public final TextView highTempView;
+            public final TextView lowTempView;
+            public final TextView humidityView;
+            public final TextView windView;
+            public final TextView pressureView;
+
+            public ViewHolder(View view) {
+                iconView = (ImageView) view.findViewById(R.id.detail_forecast_icon);
+                dateView = (TextView) view.findViewById(R.id.detail_date_textview);
+                descriptionView = (TextView) view.findViewById(R.id.detail_forecast_textview);
+                highTempView = (TextView) view.findViewById(R.id.detail_high_textview);
+                lowTempView = (TextView) view.findViewById(R.id.detail_low_textview);
+                humidityView = (TextView) view.findViewById(R.id.detail_humidity_textview);
+                pressureView = (TextView) view.findViewById(R.id.detail_pressure_textview);
+                windView = (TextView) view.findViewById(R.id.detail_wind_textview);
+            }
         }
 
     }
