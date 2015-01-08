@@ -141,7 +141,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         }
         ViewHolder holder = new ViewHolder(getView());
 
-        holder.iconView.setImageResource(R.drawable.ic_launcher);
+        int weatherId = data.getInt(data.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID));
+        holder.iconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
         String dateString = data.getString(data.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_DATETEXT));
 
         holder.dateDayView.setText(Utility.getDayName(getActivity(), dateString));
