@@ -37,13 +37,21 @@ import java.util.zip.Inflater;
 
 public class WeatherDetailActivity extends ActionBarActivity {
 
+    public static final String DATE_KEY = "forecast_date";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_weather_detail);
         if (savedInstanceState == null) {
+            String date = getIntent().getStringExtra(DATE_KEY);
+            Bundle arguments = new Bundle();
+            arguments.putString(WeatherDetailActivity.DATE_KEY, date);
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(arguments);
+
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.weather_detail_container, new DetailFragment())
+                    .add(R.id.weather_detail_container, fragment)
                     .commit();
         }
     }

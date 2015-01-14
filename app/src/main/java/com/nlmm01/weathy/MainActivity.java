@@ -28,9 +28,29 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements ForecastFragment.Callback{
 
     private boolean mTwoPane;
+
+    @Override
+    public void onItemSelected(String date) {
+        if(mTwoPane){
+            Bundle args = new Bundle();
+            args.putString(WeatherDetailActivity.DATE_KEY, date);
+
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.weather_detail_container, fragment)
+                    .commit();
+        }
+        else{
+            Intent intent = new Intent(this, WeatherDetailActivity.class)
+                    .putExtra(WeatherDetailActivity.DATE_KEY, date);
+            startActivity(intent);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

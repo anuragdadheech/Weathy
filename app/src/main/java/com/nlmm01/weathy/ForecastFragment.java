@@ -136,6 +136,18 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * Callback for when an item has been selected.
+         */
+        public void onItemSelected(String date);
+    }
+
     private void updateWeather(){
         String city = Utility.getPreferredLocation(getActivity());
         new FetchWeatherTask(getActivity()).execute(city);
@@ -166,9 +178,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                     String detailString = String.format("%s - %s - %s/%s",
                             dateString, weatherDescription, high, low);
 
-                    Intent detailIntent = new Intent(getActivity(), WeatherDetailActivity.class);
-                    detailIntent.putExtra(DetailFragment.DATE_KEY, detailCursor.getString(COL_WEATHER_DATE));
-                    getActivity().startActivity(detailIntent);
+                    ((Callback)getActivity()).onItemSelected(detailCursor.getString(COL_WEATHER_DATE));
                 }
 
 
