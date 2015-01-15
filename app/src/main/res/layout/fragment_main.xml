@@ -4,10 +4,10 @@
     android:id="@+id/listViewContainer">
 
     <ListView
+        style="@style/ForecastListStyle"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/listview_forecast"
         android:layout_gravity="top|center"
-        android:choiceMode="none"
         android:clickable="true" />
 </FrameLayout>
