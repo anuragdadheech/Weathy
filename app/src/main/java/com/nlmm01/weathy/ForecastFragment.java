@@ -53,6 +53,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private  String mLocation;
     private static final int FORECAST_LOADER = 0;
+    private static final String CLICK_POSITION = "click_position";
+    private int mposition = ListView.INVALID_POSITION;
+    private ListView forecast;
 
     // For the forecast view we're showing only a small subset of the stored data.
     // Specify the columns we need.
@@ -155,14 +158,15 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             final Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         weatherListAdapter = new ForecastAdapter(getActivity(),null,0);
-        final ListView forecast = (ListView) rootView.findViewById(R.id.listview_forecast);
+        forecast = (ListView) rootView.findViewById(R.id.listview_forecast);
         forecast.setAdapter(weatherListAdapter);
         forecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                mposition = position;
                 ForecastAdapter detailAadapter = (ForecastAdapter) parent.getAdapter();
                 Cursor detailCursor = detailAadapter.getCursor();
                 if (detailCursor != null && detailCursor.moveToPosition(position)) {
@@ -186,6 +190,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
             }
         });
+        if(savedInstanceState!=null && savedInstanceState.containsKey(CLICK_POSITION)){
+            mposition = savedInstanceState.getInt(CLICK_POSITION);
+        }
         return rootView;
     }
 
@@ -193,6 +200,14 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         getLoaderManager().initLoader(FORECAST_LOADER, null, this);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if(mposition!= ListView.INVALID_POSITION){
+            outState.putInt(CLICK_POSITION, mposition);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -224,6 +239,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         weatherListAdapter.swapCursor(data);
+        if(mposition!=ListView.INVALID_POSITION){
+            forecast.setSelection(mposition);
+        }
     }
 
     @Override

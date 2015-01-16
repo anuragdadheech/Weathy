@@ -37,7 +37,6 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
         if(mTwoPane){
             Bundle args = new Bundle();
             args.putString(WeatherDetailActivity.DATE_KEY, date);
-
             DetailFragment fragment = new DetailFragment();
             fragment.setArguments(args);
 
