@@ -55,6 +55,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     private static final int FORECAST_LOADER = 0;
     private static final String CLICK_POSITION = "click_position";
     private int mposition = ListView.INVALID_POSITION;
+    private boolean mUseTodayLayout;
     private ListView forecast;
 
     // For the forecast view we're showing only a small subset of the stored data.
@@ -137,6 +138,13 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void setUseTodayLayout(boolean useTodayLayout){
+        mUseTodayLayout = useTodayLayout;
+        if(weatherListAdapter != null){
+            weatherListAdapter.setUseTodayLayout(mUseTodayLayout);
+        }
     }
 
     /**
