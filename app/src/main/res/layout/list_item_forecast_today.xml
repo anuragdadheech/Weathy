@@ -3,29 +3,38 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:layout_gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:padding="16dp"
-    >
+    android:padding="16dp">
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center_horizontal">
+        android:layout_marginLeft="60dp"
+        android:gravity="left|center_horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textColor="@color/text_white"
+            android:fontFamily="sans-serif-condensed"
             android:id="@+id/list_item_date_textview" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="@dimen/temperature_max_today"
+            android:textColor="@color/text_white"
+            android:fontFamily="sans-serif-light"
             android:id="@+id/list_item_high_textview" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="@dimen/temperature_min_today"
+            android:textColor="@color/text_white"
+            android:fontFamily="sans-serif-light"
             android:id="@+id/list_item_low_textview" />
 
     </LinearLayout>
@@ -33,17 +42,20 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center_horizontal">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:id="@id/list_item_icon" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/text_white"
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:textAppearanceLarge"
             android:id="@+id/list_item_forecast_textview" />
 
     </LinearLayout>

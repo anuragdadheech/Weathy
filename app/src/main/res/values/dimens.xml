@@ -3,4 +3,6 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="default_elevation">8dp</dimen>
+    <dimen name="temperature_max_today">72sp</dimen>
+    <dimen name="temperature_min_today">36sp</dimen>
 </resources>

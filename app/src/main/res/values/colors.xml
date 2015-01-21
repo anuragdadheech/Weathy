@@ -4,4 +4,6 @@
     <color name="grey">#cccccc</color>
     <color name="highlight_light_blue">#ff64c2f4</color>
     <color name="weathy_blue">#ff1ca8f4</color>
+    <color name="text_white">#ffffff</color>
+
 </resources>
