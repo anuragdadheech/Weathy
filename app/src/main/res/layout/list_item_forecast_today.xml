@@ -5,15 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_vertical"
-    android:minHeight="?android:attr/listPreferredItemHeight"
-    android:padding="16dp">
+    android:background="@drawable/touch_selector_today"
+    android:minHeight="?android:attr/listPreferredItemHeight">
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginLeft="60dp"
-        android:gravity="left|center_horizontal">
+        android:layout_weight="7"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="60dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -35,6 +36,7 @@
             android:textSize="@dimen/temperature_min_today"
             android:textColor="@color/text_white"
             android:fontFamily="sans-serif-light"
+            android:layout_marginLeft="8dp"
             android:id="@+id/list_item_low_textview" />
 
     </LinearLayout>
@@ -43,12 +45,14 @@
         android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center_horizontal">
+        android:layout_marginRight="16dp"
+        android:layout_weight="5"
+        android:gravity="center_horizontal|bottom">
 
         <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:id="@id/list_item_icon" />
         <TextView
             android:layout_width="wrap_content"
