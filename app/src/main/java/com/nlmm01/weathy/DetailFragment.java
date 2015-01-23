@@ -172,6 +172,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // Use weather art image
             mIconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
 
+
             // Read date from cursor and update views for day of week and date
             String date = data.getString(data.getColumnIndex(WeatherEntry.COLUMN_DATETEXT));
             String friendlyDateText = Utility.getDayName(getActivity(), date);
@@ -183,6 +184,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             String description = data.getString(data.getColumnIndex(
                     WeatherEntry.COLUMN_SHORT_DESC));
             mDescriptionView.setText(description);
+            mIconView.setContentDescription(description);
 
             // Read high temperature from cursor and update view
             boolean isMetric = Utility.isMetric(getActivity());
