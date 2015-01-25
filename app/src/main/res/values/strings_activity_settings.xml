@@ -14,6 +14,12 @@
     <string name="pref_location_key">pref_location</string>
     <string name="pref_title_location">Location</string>
     <string name="pref_default_location">Delhi</string>
+    <string name="pref_notification_key">pref_notification</string>
+    <string name="pref_notification_title">Enable Notifications</string>
+    <string name="pref_enable_notifications_true">Enabled</string>
+    <string name="pref_enable_notifications_false">Not Enabled</string>
+    <string name="pref_enable_notifications_default" translatable="false">true</string>
+
 
     <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
     <string-array name="pref_example_list_titles">
