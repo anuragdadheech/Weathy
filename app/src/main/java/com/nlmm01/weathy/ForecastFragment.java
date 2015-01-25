@@ -127,10 +127,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_refresh) {
-            updateWeather();
-            return true;
-        }
+//        if (id == R.id.action_refresh) {
+//            updateWeather();
+//            return true;
+//        }
         if (id == R.id.action_geo) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String location = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_default_location));

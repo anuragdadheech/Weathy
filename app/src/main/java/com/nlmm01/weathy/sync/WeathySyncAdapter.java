@@ -271,7 +271,7 @@ public class WeathySyncAdapter extends AbstractThreadedSyncAdapter {
                 getContext().getContentResolver().delete(WeatherEntry.CONTENT_URI,
                         WeatherEntry.COLUMN_DATETEXT + " <= ?",
                         new String[] {yesterdayDate});
-                
+
                 notifyWeather();
             }
             Log.d(LOG_TAG, "FetchWeatherTask Complete. " + cVVector.size() + " Inserted");
