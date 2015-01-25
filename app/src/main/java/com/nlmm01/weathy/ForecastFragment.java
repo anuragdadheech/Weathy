@@ -4,6 +4,7 @@ import com.nlmm01.weathy.data.WeatherContract;
 import com.nlmm01.weathy.data.WeatherContract.WeatherEntry;
 import com.nlmm01.weathy.data.WeatherContract.LocationEntry;
 import com.nlmm01.weathy.service.WeathyService;
+import com.nlmm01.weathy.sync.WeathySyncAdapter;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -165,15 +166,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     private void updateWeather(){
-//        Intent intent = new Intent(getActivity(), WeathyService.class);
-//        intent.putExtra(WeathyService.LOCATION_QUERY_EXTRA,Utility.getPreferredLocation(getActivity()));
-//        getActivity().startService(intent);
-        Intent alarmIntent = new Intent(getActivity(), WeathyService.AlarmReceiver.class);
-        alarmIntent.putExtra(WeathyService.LOCATION_QUERY_EXTRA, Utility.getPreferredLocation(getActivity()));
-
-        PendingIntent pi = PendingIntent.getBroadcast(getActivity(), 0,alarmIntent, PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager am=(AlarmManager)getActivity().getSystemService(Context.ALARM_SERVICE);
-        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10000, pi);
+        WeathySyncAdapter.syncImmediately(getActivity());
     }
 
     @Override
