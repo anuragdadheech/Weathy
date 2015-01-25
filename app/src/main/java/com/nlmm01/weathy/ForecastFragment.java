@@ -3,7 +3,6 @@ package com.nlmm01.weathy;
 import com.nlmm01.weathy.data.WeatherContract;
 import com.nlmm01.weathy.data.WeatherContract.WeatherEntry;
 import com.nlmm01.weathy.data.WeatherContract.LocationEntry;
-import com.nlmm01.weathy.service.WeathyService;
 import com.nlmm01.weathy.sync.WeathySyncAdapter;
 
 import android.app.AlarmManager;

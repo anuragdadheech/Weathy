@@ -17,6 +17,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.util.Log;
 
+import com.nlmm01.weathy.sync.WeathySyncAdapter;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +78,8 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
 
         ForecastFragment mForecastFragment = (ForecastFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
         mForecastFragment.setUseTodayLayout(!mTwoPane);
+
+        WeathySyncAdapter.initializeSyncAdapter(this);
     }
 
     @Override

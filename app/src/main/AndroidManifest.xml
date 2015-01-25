@@ -44,7 +44,7 @@
                 android:value="com.nlmm01.weathy.MainActivity" />
         </activity>
         <provider
-            android:authorities="com.nlmm01.weathy"
+            android:authorities="@string/content_authority"
             android:name=".data.WeatherProvider"
             android:exported="false"
             android:syncable="true" />

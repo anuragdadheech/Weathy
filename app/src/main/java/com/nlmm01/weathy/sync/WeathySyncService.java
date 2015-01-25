@@ -10,20 +10,20 @@ import android.util.Log;
  */
 public class WeathySyncService extends Service {
     private static final Object sSyncAdapterLock = new Object();
-    private static WeathySyncAdapter sSunshineSyncAdapter = null;
+    private static WeathySyncAdapter sWeathySyncAdapter = null;
 
     @Override
     public void onCreate() {
-        Log.d("SunshineSyncService", "onCreate - SunshineSyncService");
+        Log.d("WeathySyncService", "onCreate - WeathySyncService");
         synchronized (sSyncAdapterLock) {
-            if (sSunshineSyncAdapter == null) {
-                sSunshineSyncAdapter = new WeathySyncAdapter(getApplicationContext(), true);
+            if (sWeathySyncAdapter == null) {
+                sWeathySyncAdapter = new WeathySyncAdapter(getApplicationContext(), true);
             }
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return sSunshineSyncAdapter.getSyncAdapterBinder();
+        return sWeathySyncAdapter.getSyncAdapterBinder();
     }
 }

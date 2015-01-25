@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 
 
 import com.nlmm01.weathy.data.WeatherContract;
+import com.nlmm01.weathy.sync.WeathySyncAdapter;
 
 import java.util.List;
 
@@ -129,9 +130,7 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
         // are we starting the preference activity?
         if ( !mBindingPreference ) {
             if (preference.getKey().equals(getString(R.string.pref_location_key))) {
-                FetchWeatherTask weatherTask = new FetchWeatherTask(this);
-                String location = value.toString();
-                weatherTask.execute(location);
+                WeathySyncAdapter.syncImmediately(this);
             } else {
                 // notify code that weather may be impacted
                 getContentResolver().notifyChange(WeatherContract.WeatherEntry.CONTENT_URI, null);
